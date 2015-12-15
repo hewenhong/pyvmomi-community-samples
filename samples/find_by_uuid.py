@@ -17,6 +17,7 @@
 import atexit
 import argparse
 import getpass
+import ssl
 
 from pyVim import connect
 
@@ -62,8 +63,11 @@ def get_args():
 args = get_args()
 
 # form a connection...
+context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+context.verify_mode = ssl.CERT_NONE
 si = connect.SmartConnect(host=args.host, user=args.user, pwd=args.password,
-                          port=args.port)
+                          port=args.port,
+                          sslContext=context)
 
 # doing this means you don't need to remember to disconnect your script/objects
 atexit.register(connect.Disconnect, si)

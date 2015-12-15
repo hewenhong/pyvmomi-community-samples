@@ -21,6 +21,7 @@ from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim
 import atexit
 import sys
+import ssl
 
 
 def GetVMHosts(content):
@@ -110,10 +111,13 @@ def GetArgs():
 def main():
     global content, hosts, hostPgDict
     host, user, password = GetArgs()
+    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    context.verify_mode = ssl.CERT_NONE
     serviceInstance = SmartConnect(host=host,
                                    user=user,
                                    pwd=password,
-                                   port=443)
+                                   port=443,
+                                   sslContext=context)
     atexit.register(Disconnect, serviceInstance)
     content = serviceInstance.RetrieveContent()
     hosts = GetVMHosts(content)

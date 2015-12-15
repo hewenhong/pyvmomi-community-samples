@@ -11,6 +11,7 @@
 # Example script to reboot a VirtualMachine
 
 import atexit
+import ssl
 
 from pyVim import connect
 
@@ -40,11 +41,14 @@ def setup_args():
 
 ARGS = setup_args()
 SI = None
+context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+context.verify_mode = ssl.CERT_NONE
 try:
     SI = connect.SmartConnect(host=ARGS.host,
                               user=ARGS.user,
                               pwd=ARGS.password,
-                              port=ARGS.port)
+                              port=ARGS.port,
+                              sslContext=context)
     atexit.register(connect.Disconnect, SI)
 except IOError, ex:
     pass
@@ -52,6 +56,11 @@ except IOError, ex:
 if not SI:
     raise SystemExit("Unable to connect to host with supplied info.")
 VM = None
+
+VM = SI.content.searchIndex.FindByUuid(None, ARGS.uuid,
+                                       True,
+                                       True)
+
 if ARGS.uuid:
     VM = SI.content.searchIndex.FindByUuid(None, ARGS.uuid,
                                            True,
@@ -67,6 +76,8 @@ if VM is None:
 
 print "Found: {0}".format(VM.name)
 print "The current powerState is: {0}".format(VM.runtime.powerState)
+import pdb
+pdb.set_trace()
 TASK = VM.ResetVM_Task()
 tasks.wait_for_tasks(SI, [TASK])
 print "its done."

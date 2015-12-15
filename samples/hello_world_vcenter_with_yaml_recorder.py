@@ -22,6 +22,7 @@ a friendly encouragement to joining the community!
 import atexit
 import argparse
 import getpass
+import ssl
 
 import vcr
 
@@ -73,6 +74,8 @@ def main():
     """
 
     args = get_args()
+    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    context.verify_mode = ssl.CERT_NONE
 
     try:
         my_vcr = vcr.VCR()
@@ -82,7 +85,8 @@ def main():
             service_instance = connect.SmartConnect(host=args.host,
                                                     user=args.user,
                                                     pwd=args.password,
-                                                    port=int(args.port))
+                                                    port=int(args.port),
+                                                    sslContext=context)
             # the recording will show up in the working directory
 
         atexit.register(connect.Disconnect, service_instance)

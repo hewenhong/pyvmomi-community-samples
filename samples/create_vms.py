@@ -10,6 +10,7 @@ names using the Marvel Comics API
 import atexit
 import hashlib
 import json
+import ssl
 
 import random
 import time
@@ -39,20 +40,25 @@ def get_args():
                         action='store',
                         help='Name of Datastore to create VM in')
 
+    parser.add_argument('-n', '--name',
+                        required=True,
+                        action='store',
+                        help='Name of VM')
+
     # NOTE (hartsock): as a matter of good security practice, never ever
     # save a credential of any kind in the source code of a file. As a
     # matter of policy we want to show people good programming practice in
     # these samples so that we don't encourage security audit problems for
     # people in the future.
 
-    parser.add_argument('-k', '--public_key_file',
+    parser.add_argument('-m', '--mem_mb',
                         required=False,
                         action='store',
                         help='Name of the file holding your marvel public key,'
                              ' the key should be the first only of the file. '
                              'Set one up at developer.marvel.com/account')
 
-    parser.add_argument('-e', '--private_key_file',
+    parser.add_argument('-C', '--cpu_num',
                         required=False,
                         action='store',
                         help='Name of the file holding your marvel private '
@@ -107,8 +113,8 @@ def get_marvel_characters(number_of_characters, marvel_public_key,
 
 
 def create_dummy_vm(name, service_instance, vm_folder, resource_pool,
-                    datastore):
-    """Creates a dummy VirtualMachine with 1 vCpu, 128MB of RAM.
+                    datastore, mem_mb, cpu_num):
+    """Creates a dummy VirtualMachine .
 
     :param name: String Name for the VirtualMachine
     :param service_instance: ServiceInstance connection
@@ -116,7 +122,7 @@ def create_dummy_vm(name, service_instance, vm_folder, resource_pool,
     :param resource_pool: ResourcePool to place the VirtualMachine in
     :param datastore: DataStrore to place the VirtualMachine on
     """
-    vm_name = 'MARVEL-' + name
+    vm_name = 'QingCloud-' + name
     datastore_path = '[' + datastore + '] ' + vm_name
 
     # bare minimum VM shell, no disks. Feel free to edit
@@ -125,7 +131,7 @@ def create_dummy_vm(name, service_instance, vm_folder, resource_pool,
                                suspendDirectory=None,
                                vmPathName=datastore_path)
 
-    config = vim.vm.ConfigSpec(name=vm_name, memoryMB=128, numCPUs=1,
+    config = vim.vm.ConfigSpec(name=vm_name, memoryMB=int(mem_mb), numCPUs=int(cpu_num),
                                files=vmx_file, guestId='dosGuest',
                                version='vmx-07')
 
@@ -142,22 +148,14 @@ def main():
 
     args = get_args()
 
-    if args.public_key_file:
-        with open(args.public_key_file) as key_file:
-            marvel_public_key = key_file.readline().strip()
-    else:
-        marvel_public_key = raw_input('Marvel public key: ').strip()
-
-    if args.private_key_file:
-        with open(args.private_key_file) as key_file:
-            marvel_private_key = key_file.readline().strip()
-    else:
-        marvel_private_key = raw_input('Marvel private key: ').strip()
+    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    context.verify_mode = ssl.CERT_NONE
 
     service_instance = connect.SmartConnect(host=args.host,
                                             user=args.user,
                                             pwd=args.password,
-                                            port=int(args.port))
+                                            port=int(args.port),
+                                            sslContext=context)
     if not service_instance:
         print("Could not connect to the specified host using specified "
               "username and password")
@@ -174,13 +172,9 @@ def main():
     print("Connecting to Marvel API and retrieving " + str(args.count) +
           " random character(s) ...")
 
-    characters = get_marvel_characters(args.count,
-                                       marvel_public_key,
-                                       marvel_private_key)
 
-    for name in characters:
-        create_dummy_vm(name, service_instance, vmfolder, resource_pool,
-                        args.datastore)
+    create_dummy_vm(args.name, service_instance, vmfolder, resource_pool,
+                    args.datastore, args.mem_mb, args.cpu_num)
 
     return 0
 
