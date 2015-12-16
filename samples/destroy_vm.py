@@ -16,6 +16,7 @@
 from __future__ import print_function
 
 import atexit
+import ssl
 
 import requests
 from pyVim import connect
@@ -33,7 +34,7 @@ def setup_args():
     parser = cli.build_arg_parser()
     # using j here because -u is used for user
     parser.add_argument('-j', '--uuid',
-                        help='BIOS UUID of the VirtualMachine you want '
+                        help='UUID of the VirtualMachine you want '
                              'to reboot.')
     parser.add_argument('-n', '--name',
                         help='DNS Name of the VirtualMachine you want to '
@@ -49,11 +50,14 @@ def setup_args():
 
 ARGS = setup_args()
 SI = None
+context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+context.verify_mode = ssl.CERT_NONE
 try:
     SI = connect.SmartConnect(host=ARGS.host,
                               user=ARGS.user,
                               pwd=ARGS.password,
-                              port=ARGS.port)
+                              port=ARGS.port,
+                              sslContext=context)
     atexit.register(connect.Disconnect, SI)
 except IOError, ex:
     pass
@@ -64,7 +68,7 @@ VM = None
 if ARGS.uuid:
     VM = SI.content.searchIndex.FindByUuid(None, ARGS.uuid,
                                            True,
-                                           False)
+                                           True)
 elif ARGS.name:
     VM = SI.content.searchIndex.FindByDnsName(None, ARGS.name,
                                               True)

@@ -15,6 +15,7 @@
 from __future__ import print_function
 
 import atexit
+import ssl
 
 import requests
 
@@ -44,11 +45,14 @@ def setup_args():
 args = setup_args()
 si = None
 instance_search = False
+context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+context.verify_mode = ssl.CERT_NONE
 try:
     si = SmartConnect(host=args.host,
                       user=args.user,
                       pwd=args.password,
-                      port=int(args.port))
+                      port=int(args.port),
+                      sslContext=context)
     atexit.register(Disconnect, si)
 except IOError:
     pass

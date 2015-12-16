@@ -9,6 +9,7 @@ associated devices
 import argparse
 import atexit
 import json
+import ssl
 
 from pyVim import connect
 from pyVmomi import vmodl
@@ -77,12 +78,15 @@ def main():
     args = get_args()
 
     cli.prompt_for_password(args)
+    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    context.verify_mode = ssl.CERT_NONE
 
     try:
         service_instance = connect.SmartConnect(host=args.host,
                                                 user=args.user,
                                                 pwd=args.password,
-                                                port=int(args.port))
+                                                port=int(args.port),
+                                                sslContext=context)
         if not service_instance:
             print("Could not connect to the specified host using specified "
                   "username and password")

@@ -24,6 +24,7 @@ import atexit
 import urllib2
 import urlparse
 import base64
+import ssl
 
 
 VMX_PATH = []
@@ -205,13 +206,16 @@ def main():
     are taken from the getallvms.py script from the pyvmomi gihub repo
     """
     args = get_args()
+    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    context.verify_mode = ssl.CERT_NONE
     try:
         si = None
         try:
             si = SmartConnect(host=args.host,
                               user=args.user,
                               pwd=args.password,
-                              port=int(args.port))
+                              port=int(args.port),
+                              sslContext=context)
         except IOError, e:
             pass
 

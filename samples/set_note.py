@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import atexit
+import ssl
 
 from pyVim import connect
 from pyVmomi import vim
@@ -40,11 +41,14 @@ def setup_args():
 
 args = setup_args()
 si = None
+context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+context.verify_mode = ssl.CERT_NONE
 try:
     si = connect.SmartConnect(host=args.host,
                               user=args.user,
                               pwd=args.password,
-                              port=int(args.port))
+                              port=int(args.port),
+                              sslContext=context)
     atexit.register(connect.Disconnect, si)
 except IOError, e:
     pass

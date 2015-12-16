@@ -47,11 +47,6 @@ def get_args():
                         action='store',
                         help='Password to use')
 
-    parser.add_argument('-v', '--vm-name',
-                        required=False,
-                        action='store',
-                        help='name of the vm')
-
     parser.add_argument('--uuid',
                         required=False,
                         action='store',
@@ -143,10 +138,6 @@ def main():
     if args.uuid:
         search_index = si.content.searchIndex
         vm = search_index.FindByUuid(None, args.uuid, True)
-    elif args.vm_name:
-        content = si.RetrieveContent()
-        vm = get_obj(content, [vim.VirtualMachine], args.vm_name)
-
     if vm:
         add_disk(vm, si, args.disk_size, args.disk_type)
     else:

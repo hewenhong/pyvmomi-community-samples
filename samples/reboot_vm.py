@@ -76,8 +76,6 @@ if VM is None:
 
 print "Found: {0}".format(VM.name)
 print "The current powerState is: {0}".format(VM.runtime.powerState)
-import pdb
-pdb.set_trace()
 TASK = VM.ResetVM_Task()
 tasks.wait_for_tasks(SI, [TASK])
 print "its done."
