@@ -130,10 +130,11 @@ def create_dummy_vm(name, service_instance, vm_folder, resource_pool,
                                snapshotDirectory=None,
                                suspendDirectory=None,
                                vmPathName=datastore_path)
+    tools_info = vim.vm.ToolsConfigInfo(afterPowerOn=True)
 
     config = vim.vm.ConfigSpec(name=vm_name, memoryMB=int(mem_mb), numCPUs=int(cpu_num),
                                files=vmx_file, guestId='dosGuest',
-                               version='vmx-07')
+                               version='vmx-07', tools=tools_info)
 
     print "Creating VM {}...".format(vm_name)
     task = vm_folder.CreateVM_Task(config=config, pool=resource_pool)
